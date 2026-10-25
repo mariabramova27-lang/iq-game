@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Клуб Интеллектуалов — Мягкая математика</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap');
+
+:root {
+  --bg-dark: #0a0a1a;
+  --bg-board: #12122e;
+  --gold: #ffd700;
+  --gold-light: #ffeb3b;
+  --text-light: #e2e8f0;
+  --primary: #6c5ce7;
+  --secondary: #fd79a8;
+  --success: #00b894;
+  --danger: #e74c3c;
+  --vk: #0077FF;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+
+body {
+  background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a3a 100%);
+  color: var(--text-light);
+  min-height: 100vh;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.bg-glow {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(108,92,231,0.15) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+.container {
+  max-width: 1200px; margin: 0 auto; width: 100%; padding: 20px;
+  position: relative; z-index: 1; flex: 1;
+}
+
+/* ============ МЕНЮ ============ */
+#screen-menu {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 85vh; text-align: center;
+}
+.logo {
+  font-size: 3rem; font-weight: 900;
+  background: linear-gradient(135deg, var(--gold), #ff8c00);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 10px; text-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
+}
+.subtitle { font-size: 1.2rem; color: #a0a0c0; margin-bottom: 40px; }
+.menu-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; max-width: 1100px;
+}
+.menu-btn {
+  background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 20px; padding: 25px 15px; cursor: pointer; transition: all 0.3s;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  text-decoration: none; color: var(--text-light);
+}
+.menu-btn:hover {
+  transform: translateY(-8px); background: rgba(255,255,255,0.1);
+  border-color: var(--gold); box-shadow: 0 15px 40px rgba(255,215,0,0.2);
+}
+.menu-btn .icon { font-size: 3.5rem; }
+.menu-btn h2 { font-size: 1.3rem; font-weight: 800; color: var(--gold); }
+.menu-btn p { font-size: 0.85rem; color: #a0a0c0; line-height: 1.4; }
+
+/* ============ ОБЩИЕ ЭКРАНЫ ============ */
+.screen { display: none; animation: fadeIn 0.5s ease; }
+.screen.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+.header-bar {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+}
+.back-btn {
+  background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 10px 20px;
+  border-radius: 10px; cursor: pointer; font-weight: 700; transition: 0.2s;
+}
+.back-btn:hover { background: rgba(255,255,255,0.2); }
+.score-display { font-size: 1.4rem; font-weight: 900; color: var(--gold); }
+
+/* ============ СВОЯ ИГРА ============ */
+.own-board {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+  background: #000; padding: 8px; border-radius: 12px; border: 4px solid var(--gold);
+  width: 100%;
+}
+.own-col {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.own-cell {
+  background: var(--bg-board); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  padding: 20px 5px; font-weight: 900; cursor: pointer; transition: all 0.2s;
+  text-align: center; color: var(--gold); font-size: 1.2rem; flex: 1;
+}
+.own-cell.header {
+  background: #000; color: var(--gold-light); cursor: default;
+  border: none; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;
+  flex: 0 0 auto; padding: 10px 5px; min-height: 60px;
+}
+.own-cell:not(.header):hover { background: var(--primary); transform: scale(1.05); color: #fff; }
+.own-cell.answered { background: #000; color: transparent; pointer-events: none; border-color: #000; }
+
+/* ============ БРЕЙН-РИНГ ============ */
+.brain-container {
+  max-width: 800px; margin: 0 auto; text-align: center;
+  background: rgba(255,255,255,0.03); padding: 40px 20px; border-radius: 20px;
+  border: 2px solid rgba(255,255,255,0.1);
+}
+.brain-question { font-size: 1.4rem; font-weight: 700; margin-bottom: 30px; line-height: 1.4; }
+.brain-options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.brain-opt {
+  background: rgba(255,255,255,0.1); border: 2px solid transparent; color: #fff;
+  padding: 20px; border-radius: 12px; font-size: 1.05rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; font-family: inherit;
+}
+.brain-opt:hover { background: rgba(255,255,255,0.2); border-color: var(--gold); }
+.brain-opt.correct { background: var(--success); border-color: var(--success); }
+.brain-opt.wrong { background: var(--danger); border-color: var(--danger); }
+.timer-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+.timer-fill { height: 100%; background: var(--gold); width: 100%; transition: width 1s linear; }
+
+/* ============ ЧТО? ГДЕ? КОГДА? ============ */
+.what-container { display: flex; flex-direction: column; align-items: center; }
+.wheel-wrapper { position: relative; width: 400px; height: 400px; margin-bottom: 30px; }
+.wheel-svg { width: 100%; height: 100%; transition: transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99); }
+.wheel-arrow {
+  position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+  font-size: 40px; color: var(--gold); z-index: 10; text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+.spin-btn {
+  background: linear-gradient(135deg, var(--gold), #ff8c00); color: #000;
+  border: none; padding: 15px 40px; border-radius: 40px; font-size: 1.2rem; font-weight: 900;
+  cursor: pointer; transition: 0.2s; box-shadow: 0 10px 20px rgba(255,215,0,0.3);
+}
+.spin-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(255,215,0,0.4); }
+.spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ============ УМНИЦЫ И УМНИКИ ============ */
+.smart-container {
+  max-width: 800px; margin: 0 auto; background: rgba(255,255,255,0.03);
+  border: 2px solid var(--primary); border-radius: 20px; padding: 30px;
+  text-align: center; position: relative;
+}
+.smart-path {
+  display: flex; justify-content: space-between; margin-bottom: 30px; position: relative;
+}
+.smart-path::before {
+  content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 4px;
+  background: rgba(255,255,255,0.1); z-index: 1; transform: translateY(-50%);
+}
+.smart-step {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--bg-dark);
+  border: 3px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;
+  font-weight: 900; position: relative; z-index: 2; transition: all 0.3s;
+}
+.smart-step.active { border-color: var(--gold); background: var(--primary); box-shadow: 0 0 15px var(--primary); }
+.smart-step.passed { border-color: var(--success); background: var(--success); }
+.smart-q { font-size: 1.3rem; font-weight: 700; line-height: 1.5; margin-bottom: 20px; min-height: 80px;}
+.smart-input-group { display: flex; gap: 10px; max-width: 400px; margin: 0 auto; }
+.smart-input {
+  flex: 1; padding: 15px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.3); color: #fff; font-size: 1.2rem; font-weight: 700; text-align: center;
+  outline: none; font-family: inherit;
+}
+.smart-input:focus { border-color: var(--primary); }
+.smart-submit {
+  background: var(--primary); color: #fff; border: none; padding: 0 25px;
+  border-radius: 10px; font-weight: 900; font-size: 1.1rem; cursor: pointer; transition: 0.2s;
+}
+.smart-submit:hover { background: #5a4bcf; }
+.smart-feedback { margin-top: 15px; font-weight: 700; font-size: 1.1rem; min-height: 25px; }
+.smart-hint { color: #a0a0c0; font-size: 0.9rem; margin-top: 10px; font-style: italic; }
+
+/* ============ МОДАЛКА ============ */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+  display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: var(--bg-board); border: 3px solid var(--gold); border-radius: 20px;
+  width: 100%; max-width: 700px; padding: 40px; text-align: center; position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+}
+.modal-close {
+  position: absolute; top: 15px; right: 20px; background: none; border: none;
+  color: #fff; font-size: 30px; cursor: pointer; opacity: 0.6; transition: 0.2s;
+}
+.modal-close:hover { opacity: 1; transform: scale(1.1); }
+.modal-theme { color: var(--gold); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+.modal-q { font-size: 1.4rem; line-height: 1.5; margin-bottom: 30px; }
+.reveal-btn {
+  background: var(--primary); color: #fff; border: none; padding: 12px 30px;
+  border-radius: 10px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.2s;
+}
+.reveal-btn:hover { background: #5a4bcf; }
+.modal-a {
+  display: none; margin-top: 25px; font-size: 1.3rem; color: var(--success);
+  font-weight: 900; background: rgba(0, 184, 148, 0.1); padding: 15px; border-radius: 10px;
+  border: 1px dashed var(--success);
+}
+.modal-a.show { display: block; animation: fadeIn 0.3s; }
+
+/* Реклама */
+.promo {
+  position: fixed; bottom: 15px; right: 15px; background: rgba(18, 18, 46, 0.95);
+  border: 1px solid var(--gold); border-radius: 12px; padding: 12px;
+  display: flex; flex-direction: column; gap: 8px; z-index: 150;
+}
+.promo-title { font-size: 12px; font-weight: 900; color: var(--gold); }
+.promo-links { display: flex; gap: 8px; }
+.promo-btn {
+  flex: 1; text-align: center; padding: 6px 10px; border-radius: 6px; font-size: 11px;
+  font-weight: 800; text-decoration: none; transition: 0.2s;
+}
+.promo-btn.vk { background: var(--vk); color: #fff; }
+.promo-btn.vk:hover { background: #005bb5; }
+.promo-btn.msg { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+.promo-btn.msg:hover { background: rgba(255,255,255,0.2); }
+
+/* Адаптив */
+@media (max-width: 1000px) {
+  .menu-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+  .own-board { display: flex; overflow-x: auto; gap: 5px; padding-bottom: 15px; }
+  .own-col { min-width: 120px; }
+  .brain-options { grid-template-columns: 1fr; }
+  .wheel-wrapper { width: 300px; height: 300px; }
+}
+@media (max-width: 600px) {
+  .menu-grid { grid-template-columns: 1fr; }
+  .logo { font-size: 2rem; }
+  .smart-input-group { flex-direction: column; }
+  .smart-submit { padding: 15px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<div class="container">
+  
+  <!-- МЕНЮ -->
+  <div id="screen-menu" class="screen active">
+    <div class="logo">Клуб Интеллектуалов</div>
+    <div class="subtitle">Мягкая математика · 3–6 класс</div>
+    <div class="menu-grid">
+      <div class="menu-btn" onclick="startOwnGame()">
+        <div class="icon">💎</div>
+        <h2>Своя игра</h2>
+        <p>6 тем по 5 вопросов. Выбирай стоимость и зарабатывай баллы.</p>
+      </div>
+      <div class="menu-btn" onclick="startBrainRing()">
+        <div class="icon">⚡</div>
+        <h2>Брейн-ринг</h2>
+        <p>Блиц на время. 10 вопросов, 15 секунд на ответ.</p>
+      </div>
+      <div class="menu-btn" onclick="startWhatWhereWhen()">
+        <div class="icon">🔮</div>
+        <h2>Что? Где? Когда?</h2>
+        <p>Крути волчок, отвечай на вопросы и открывай черный ящик.</p>
+      </div>
+      <div class="menu-btn" onclick="startSmart()">
+        <div class="icon">🎓</div>
+        <h2>Умницы и умники</h2>
+        <p>5 шагов к победе. Олимпиадные задачи на логику и смекалку.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- СВОЯ ИГРА -->
+  <div id="screen-own" class="screen">
+    <div class="header-bar">
+      <button class="back-btn" onclick="goMenu()">← Назад</button>
+      <div class="score-display">Баллы: <span id="own-score">0</span></div>
+    </div>
+    <div class="own-board" id="own-board"></div>
+  </div>
+
+  <!-- БРЕЙН-РИНГ -->
+  <div id="screen-brain" class="screen">
+    <div class="header-bar">
+      <button class="back-btn" onclick="goMenu()">← Назад</button>
+      <div class="score-display">Счет: <span id="brain-score">0</span></div>
+    </div>
+    <div class="brain-container" id="brain-container">
+      <div class="timer-bar"><div class="timer-fill" id="brain-timer"></div></div>
+      <div class="brain-question" id="brain-q">Вопрос...</div>
+      <div class="brain-options" id="brain-opts"></div>
+    </div>
+  </div>
+
+  <!-- ЧТО? ГДЕ? КОГДА? -->
+  <div id="screen-what" class="screen">
+    <div class="header-bar">
+      <button class="back-btn" onclick="goMenu()">← Назад</button>
+      <div class="score-display">Секторов открыто: <span id="what-score">0</span>/12</div>
+    </div>
+    <div class="what-container">
+      <div class="wheel-wrapper">
+        <div class="wheel-arrow">▼</div>
+        <svg class="wheel-svg" id="wheel" viewBox="0 0 200 200"></svg>
+      </div>
+      <button class="spin-btn" id="spin-btn" onclick="spinWheel()">Крутить волчок 🎯</button>
+    </div>
+  </div>
+
+  <!-- УМНИЦЫ И УМНИКИ -->
+  <div id="screen-smart" class="screen">
+    <div class="header-bar">
+      <button class="back-btn" onclick="goMenu()">← Назад</button>
+    </div>
+    <div class="smart-container">
+      <div class="smart-path" id="smart-path"></div>
+      <div class="smart-q" id="smart-q">Вопрос...</div>
+      <div class="smart-input-group">
+        <input type="number" id="smart-input" class="smart-input" placeholder="Ответ" onkeypress="handleSmartKey(event)">
+        <button class="smart-submit" id="smart-submit-btn" onclick="checkSmartAnswer()">Ответить</button>
+      </div>
+      <div class="smart-feedback" id="smart-feedback"></div>
+      <div class="smart-hint" id="smart-hint"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- МОДАЛКА ВОПРОСА -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-theme" id="modal-theme">Тема</div>
+    <div class="modal-q" id="modal-q">Вопрос</div>
+    <button class="reveal-btn" id="reveal-btn">Показать ответ</button>
+    <div class="modal-a" id="modal-a">Ответ</div>
+  </div>
+</div>
+
+<!-- РЕКЛАМА -->
+<div class="promo">
+  <div class="promo-title">🚀 Мягкая математика</div>
+  <div class="promo-links">
+    <a href="https://vk.com/smartskillsmaria" target="_blank" class="promo-btn vk">Группа</a>
+    <a href="https://vk.com/im/convo/-229273902?entrypoint=community_page&tab=all" target="_blank" class="promo-btn msg">✉️ Написать</a>
+  </div>
+</div>
+
+<script>
+/* ================== ДАННЫЕ ================== */
+const CATEGORIES = [
+  { name: "Арифм. метод", questions: [
+    { q: "Человек, стоявший в очереди перед Вами, был выше человека, стоявшего после того человека, который стоял перед Вами. Был ли человек, стоявший перед Вами, выше вас?", a: "Да. Если человек перед вами — А, вы — Б, человек после вас — В. 'Тот, кто стоял перед Вами' — это А. 'Человек, стоявший после А' — это вы (Б). Значит, А был выше Б (вас)." },
+    { q: "Парикмахер в Женеве охотнее подстрижет двух французов, чем одного немца. Почему?", a: "Потому что за двоих он получит больше денег, чем за одного." },
+    { q: "Что дороже: вагон, наполненный золотыми монетами по 5 руб., или половина вагона, наполненная золотыми монетами по 10 руб.?", a: "Одинаково. Монет по 10 руб. в полвагона поместится ровно в 2 раза меньше, но каждая стоит в 2 раза дороже." },
+    { q: "Сейчас отец старше сына в 4 раза, а через 20 лет будет старше в 2 раза. Сколько лет сыну?", a: "10 лет. (Пусть сыну х, отцу 4х. 4х+20 = 2(х+20). 4х+20 = 2х+40. 2х=20. х=10)." },
+    { q: "Позавчера Васе было 10 лет, а в следующем году ему будет 13. Как такое возможно?", a: "Сегодня 1 января, а день рождения Васи 31 декабря. Позавчера (30 декабря) ему было 10. Вчера (31 декабря) исполнилось 11. В этом году исполнится 12, а в следующем — 13." }
+  ]},
+  { name: "Логика и лжецы", questions: [
+    { q: "А: «Мы оба лжецы». Б: «А — лжец». Кто есть кто?", a: "А — лжец, Б — рыцарь. (Если бы А был рыцарем, он не мог бы сказать, что он лжец)." },
+    { q: "На собрании встретились 28 жителей острова рыцарей и лжецов. Каждый произнес ровно одно утверждение. Один из них заявил, что на собрании присутствует ровно 7 рыцарей, Двое утверждали, что на собрании 6 рыцарей, ... . Семеро заявили, что на собрании ровно один рыцарь. Сколько могло быть рыцарей?", a: "4 рыцаря. (Люди, сказавшие правду — это и есть рыцари. Если рыцарей x, то фразу «ровно x рыцарей» сказали 8−x человек. Уравнение: x = 8−x. Отсюда 2x = 8, x = 4)." },
+    { q: "А говорит: «Б — лжец». Б говорит: «В — лжец». В говорит: «А и Б — лжецы». Кто есть кто?", a: "А — лжец, Б — рыцарь, В — лжец." },
+    { q: "Перед вами 3 шкатулки. На 1: «Здесь змея», на 2: «Здесь пусто», на 3: «Змея во второй». Известно, что только одна надпись истинна. Где змея?", a: "Змея во 2-й шкатулке. (Тогда 1-я и 2-я надписи ложны, а 3-я истинна)." },
+    { q: "Путник спросил одного из двух братьев (рыцаря или лжеца): «Твой брат рыцарь?» Тот ответил «Да». Кто из них солгал?", a: "Ответивший. (Рыцарь сказал бы правду: «Нет». Лжец соврал бы: «Да, он рыцарь»)." }
+  ]},
+  { name: "Совместная работа", questions: [
+    { q: "Считарик может покрасить забор за 6 ч, Логик за 3 ч. За сколько вместе?", a: "2 часа. (1/6 + 1/3 = 3/6 = 1/2. 1÷1/2 = 2)." },
+    { q: "Бассейн наполняется через 1-ю трубу за 10 ч, через 2-ю за 15 ч. За сколько вместе?", a: "6 часов. (1/10 + 1/15 = 5/30 = 1/6. 1÷1/6 = 6)." },
+    { q: "Профессор и Принцесса вместе пропалывают грядку за 4 часа. Профессор один за 12 часов. За сколько Принцесса одна?", a: "6 часов. (1/4 - 1/12 = 3/12 - 1/12 = 2/12 = 1/6)." },
+    { q: "Два экскаватора вырыли котлован за 6 часов. Первый за 10 часов. За сколько второй?", a: "15 часов. (1/6 - 1/10 = 5/30 - 3/30 = 2/30 = 1/15)." },
+    { q: "Первый рабочий делает 10 деталей в час, второй 15. Вместе сделали 200 деталей. Сколько времени они работали?", a: "8 часов. (10+15 = 25 дет/ч. 200÷25 = 8)." }
+  ]},
+  { name: "Движение", questions: [
+    { q: "Пешеход прошел 15 км за 3 часа. С какой скоростью шел?", a: "5 км/ч. (15÷3=5)." },
+    { q: "Автомобиль едет 60 км/ч. Какое расстояние за 4 часа?", a: "240 км. (60×4=240)." },
+    { q: "Велосипедист ехал 2 часа со скоростью 12 км/ч, потом еще 3 часа со скоростью 10 км/ч. Какое общее расстояние?", a: "54 км. (12×2 + 10×3 = 24+30=54)." },
+    { q: "Турист прошел 6 км со скоростью 3 км/ч, затем проехал на автобусе 40 км со скоростью 20 км/ч. Сколько всего времени был в пути?", a: "4 часа. (6÷3=2 ч, 40÷20=2 ч. 2+2=4)." },
+    { q: "Первую половину пути автомобиль проехал за 2 часа со скоростью 60 км/ч, вторую за 3 часа. Какова скорость на второй половине?", a: "40 км/ч. (Первая половина = 60×2=120 км. Вторая = 120 км ÷ 3 ч = 40 км/ч)." }
+  ]},
+  { name: "По кругу", questions: [
+    { q: "Длина круга 400 м. Бегун пробегает его за 50 с. Скорость?", a: "8 м/с. (400÷50=8)." },
+    { q: "Два бегуна на круге 300 м. 5 м/с и 3 м/с. Через сколько 1-й обгонит 2-го на круг?", a: "150 с. (300÷(5−3)=150)." },
+    { q: "Считарик и Логик бегут по кругу 600 м. Скорости 8 и 6 м/с. Через сколько Считарик обгонит Логика на круг?", a: "300 с. (600÷(8−6)=300)." },
+    { q: "Велосипедист на треке 400 м едет со скоростью 10 м/с. За сколько он проедет 3 круга?", a: "120 с. (400×3÷10=120)." },
+    { q: "Два мальчика бегут по кругу 200 м. Скорости 6 и 4 м/с. Через сколько они встретятся, если побегут в противоположные стороны?", a: "20 с. (200÷(6+4)=20)." }
+  ]},
+  { name: "По реке", questions: [
+    { q: "Собственная скорость лодки 10 км/ч, течение 2 км/ч. Скорость по течению?", a: "12 км/ч. (10+2=12)." },
+    { q: "Скорость по течению 15 км/ч, против 9 км/ч. Какая скорость течения?", a: "3 км/ч. ((15−9)÷2=3)." },
+    { q: "Катер проплыл по течению 60 км за 3 часа. Собственная скорость 18 км/ч. Какова скорость течения?", a: "2 км/ч. (60÷3=20 км/ч. 20−18=2)." },
+    { q: "Лодка плыла 4 часа против течения. Собственная 12 км/ч, течение 3 км/ч. Какое расстояние?", a: "36 км. ((12−3)×4=36)." },
+    { q: "Плот проплыл 24 км за 6 часов. За сколько это же расстояние проплывет катер со скоростью 12 км/ч?", a: "За 2 часа. (Скорость плота = 24÷6=4 км/ч (это скорость течения). Катер пройдет за 24÷12=2 ч)." }
+  ]}
+];
+
+const BRAIN_QUESTIONS = [
+  { q: "У слонов и мух вместе 15 голов и 74 ноги. Сколько слонов и сколько мух?", opts: ["8 слонов, 7 мух", "7 слонов, 8 мух", "10 слонов, 5 мух", "5 слонов, 10 мух"], a: 0 },
+  { q: "Встречное движение: два поезда выехали навстречу. Скорости 60 и 80 км/ч. Через сколько они встретятся, если между ними 280 км?", opts: ["2 часа", "3 часа", "4 часа", "1 час"], a: 0 },
+  { q: "Движение вдогонку: Дракон летит за Котэ со скоростью 80 км/ч, Котэ — 60 км/ч. Отставание 100 км. Через сколько часов Дракон догонит Котэ?", opts: ["2 часа", "5 часов", "10 часов", "4 часа"], a: 1 },
+  { q: "Противоположные: Считарик и Логик разъехались из одной точки в разные стороны. 50 и 70 км/ч. Какое расстояние между ними через 3 часа?", opts: ["360 км", "120 км", "240 км", "420 км"], a: 0 },
+  { q: "Отставание: Считарик едет на 10 км/ч быстрее Котэ. Какое расстояние будет между ними через 2 часа?", opts: ["10 км", "20 км", "30 км", "40 км"], a: 1 },
+  { q: "По кругу: Два велосипедиста на треке 200 м. Скорости 6 и 4 м/с. Через сколько секунд 1-й обгонит 2-го на круг?", opts: ["50 с", "100 с", "200 с", "150 с"], a: 1 },
+  { q: "По воде: Катер плывет по течению. Собственная 20 км/ч, течение 3 км/ч. Расстояние 46 км. Сколько часов в пути?", opts: ["2 часа", "3 часа", "4 часа", "1 час"], a: 0 },
+  { q: "По воде (против): Лодка против течения. Собственная 12 км/ч, течение 2 км/ч. Расстояние 40 км. Сколько часов в пути?", opts: ["2 часа", "3 часа", "4 часа", "5 часов"], a: 2 },
+  { q: "Движение (встречное): Два автомобиля едут навстречу. 70 и 90 км/ч. Между городами 320 км. Через сколько часов встретятся?", opts: ["2 часа", "4 часа", "3 часа", "5 часов"], a: 0 },
+  { q: "По воде: Скорость лодки по течению 15 км/ч, против 9 км/ч. Какая скорость течения?", opts: ["3 км/ч", "6 км/ч", "12 км/ч", "2 км/ч"], a: 0 }
+];
+
+const WHAT_QUESTIONS = [
+  { q: "Переправа: волк, коза и капуста. Как перевезти всех?", a: "Сначала козу. Вернуться. Перевезти волка, забрать козу. Перевезти капусту. Вернуться за козой." },
+  { q: "ЧЕРНЫЙ ЯЩИК: В нем лежит то, что имеет 4 ножки, но не ходит. Что это?", a: "Стол или стул." },
+  { q: "9 монет, 1 фальшивая. Как найти за 2 взвешивания?", a: "Делим на 3 кучки по 3. Взвешиваем 3 на 3. Остаётся 3. Кладем 1 на 1." },
+  { q: "ЧЕРНЫЙ ЯЩИК: В нем лежит геометрическая фигура с 3 углами. Что это?", a: "Треугольник." },
+  { q: "Как разрезать круглый торт тремя разрезами на 8 частей?", a: "Два разреза крест-накрест и один горизонтально." },
+  { q: "ЧЕРНЫЙ ЯЩИК: В нем лежит предмет, который показывает время, но не часы. Что это?", a: "Песочные часы (или будильник)." },
+  { q: "Сколько существует двузначных чисел с цифрой 5?", a: "18 чисел (15, 25... 95 и 50-59)." },
+  { q: "ЧЕРНЫЙ ЯЩИК: В нем лежит то, что помогает измерять вес. Что это?", a: "Весы." },
+  { q: "У Маши было 5 яблок. 2 она съела. Сколько осталось?", a: "3 яблока." },
+  { q: "Дежавю — кличка ТАКОЙ собаки, появившейся на свет в 2009 году. Какой именно?", a: "Собаки-клона. В 2009 году южнокорейские учёные провели успешное клонирование собаки, и щенка назвали Дежавю." },
+  { q: "Сколько существует трехзначных чисел?", a: "900 чисел." },
+  { q: "ЧЕРНЫЙ ЯЩИК: В нем находится формула нахождения площади прямоугольника. Что это?", a: "S = a × b." }
+];
+
+const SMART_QUESTIONS = [
+  { q: "Кирпич весит 1 кг плюс еще полкирпича. Сколько весит кирпич? (ответ в кг)", a: 2, hint: "Пусть х — вес кирпича. x = 1 + 0.5x. 0.5x = 1. x = 2." },
+  { q: "У Считарика и Логика вместе 10 конфет. У Считарика на 2 больше. Сколько конфет у Считарика?", a: 6, hint: "Вычти разницу (10-2=8), раздели поровну (4). Прибавь разницу (4+2=6)." },
+  { q: "Сколько раз встречается цифра 7 в записи чисел от 1 до 100?", a: 20, hint: "7, 17, 27... 97 (10 раз) плюс 70, 71... 79 (ещё 10 раз)." },
+  { q: "На озере расцвела лилия. Каждый день ее количество удваивалось. На 20-й день она заполнила всё озеро. На какой день она заполнила половину озера?", a: 19, hint: "Если на 20-й день всё озеро, то вчера (на 19-й) была ровно половина." },
+  { q: "Десять строителей рассчитывали построить дом за год. Через 3 месяца работы выяснилось, что им нужно закончить работу через 3 месяца. Сколько строителей нужно позвать на подмогу, чтобы успеть в срок?", a: 20, hint: "Всего нужно 120 человеко-месяцев. За 3 месяца сделали 30. Осталось 90. За оставшиеся 3 месяца нужно 90/3 = 30 строителей. Уже есть 10, значит, позвать нужно ещё 20." }
+];
+
+/* ================== ЛОГИКА ЭКРАНОВ ================== */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goMenu() {
+  showScreen('screen-menu');
+  closeModal();
+  clearInterval(brainTimerInterval);
+}
+
+/* ================== СВОЯ ИГРА ================== */
+let ownScore = 0;
+function startOwnGame() {
+  showScreen('screen-own');
+  ownScore = 0;
+  document.getElementById('own-score').textContent = '0';
+  const board = document.getElementById('own-board');
+  board.innerHTML = '';
+
+  CATEGORIES.forEach((cat, i) => {
+    const col = document.createElement('div');
+    col.className = 'own-col';
+    
+    const header = document.createElement('div');
+    header.className = 'own-cell header';
+    header.textContent = cat.name;
+    col.appendChild(header);
+
+    cat.questions.forEach((q, j) => {
+      const val = (j + 1) * 100;
+      const cell = document.createElement('div');
+      cell.className = 'own-cell';
+      cell.textContent = val;
+      cell.onclick = () => openOwnQuestion(i, j, val, cell);
+      col.appendChild(cell);
+    });
+    board.appendChild(col);
+  });
+}
+
+function openOwnQuestion(catIdx, qIdx, val, cell) {
+  const cat = CATEGORIES[catIdx];
+  const question = cat.questions[qIdx];
+  
+  document.getElementById('modal-theme').textContent = cat.name;
+  document.getElementById('modal-q').textContent = question.q;
+  document.getElementById('modal-a').textContent = question.a;
+  document.getElementById('modal-a').classList.remove('show');
+  document.getElementById('reveal-btn').style.display = 'inline-block';
+  
+  document.getElementById('reveal-btn').onclick = () => {
+    document.getElementById('modal-a').classList.add('show');
+    document.getElementById('reveal-btn').style.display = 'none';
+    ownScore += val;
+    document.getElementById('own-score').textContent = ownScore;
+    cell.classList.add('answered');
+  };
+  
+  document.getElementById('modal').classList.add('show');
+}
+
+/* ================== БРЕЙН-РИНГ ================== */
+let brainScore = 0;
+let brainIndex = 0;
+let brainTimerInterval = null;
+let brainTimeLeft = 15;
+let brainActive = false;
+
+function startBrainRing() {
+  showScreen('screen-brain');
+  brainScore = 0;
+  brainIndex = 0;
+  document.getElementById('brain-score').textContent = '0';
+  loadBrainQuestion();
+}
+
+function loadBrainQuestion() {
+  clearInterval(brainTimerInterval);
+  if (brainIndex >= BRAIN_QUESTIONS.length) {
+    alert(`Брейн-ринг окончен! Ваш счет: ${brainScore} из 10.`);
+    goMenu();
+    return;
+  }
+
+  brainActive = true;
+  brainTimeLeft = 15;
+  const q = BRAIN_QUESTIONS[brainIndex];
+  
+  document.getElementById('brain-q').textContent = q.q;
+  const optsContainer = document.getElementById('brain-opts');
+  optsContainer.innerHTML = '';
+  
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'brain-opt';
+    btn.textContent = opt;
+    btn.onclick = () => checkBrainAnswer(i, btn);
+    optsContainer.appendChild(btn);
+  });
+
+  const timerBar = document.getElementById('brain-timer');
+  timerBar.style.width = '100%';
+  timerBar.style.background = 'var(--gold)';
+  
+  brainTimerInterval = setInterval(() => {
+    brainTimeLeft -= 1;
+    timerBar.style.width = `${(brainTimeLeft / 15) * 100}%`;
+    if (brainTimeLeft <= 5) timerBar.style.background = 'var(--danger)';
+    if (brainTimeLeft <= 0) {
+      clearInterval(brainTimerInterval);
+      if (brainActive) {
+        brainActive = false;
+        document.querySelectorAll('.brain-opt').forEach(b => b.disabled = true);
+        document.querySelectorAll('.brain-opt')[q.a].classList.add('correct');
+        setTimeout(() => { brainIndex++; loadBrainQuestion(); }, 2000);
+      }
+    }
+  }, 1000);
+}
+
+function checkBrainAnswer(selectedIdx, btn) {
+  if (!brainActive) return;
+  brainActive = false;
+  clearInterval(brainTimerInterval);
+
+  const q = BRAIN_QUESTIONS[brainIndex];
+  const allBtns = document.querySelectorAll('.brain-opt');
+  allBtns.forEach(b => b.disabled = true);
+
+  if (selectedIdx === q.a) {
+    btn.classList.add('correct');
+    brainScore++;
+    document.getElementById('brain-score').textContent = brainScore;
+  } else {
+    btn.classList.add('wrong');
+    allBtns[q.a].classList.add('correct');
+  }
+
+  setTimeout(() => { brainIndex++; loadBrainQuestion(); }, 1500);
+}
+
+/* ================== ЧТО? ГДЕ? КОГДА? ================== */
+let whatScore = 0;
+let usedSectors = new Set();
+let wheelSpinning = false;
+
+function startWhatWhereWhen() {
+  showScreen('screen-what');
+  whatScore = 0;
+  usedSectors.clear();
+  wheelSpinning = false;
+  document.getElementById('what-score').textContent = '0';
+  document.getElementById('spin-btn').disabled = false;
+  drawWheel();
+}
+
+function drawWheel() {
+  const svg = document.getElementById('wheel');
+  svg.innerHTML = '';
+  svg.style.transition = 'none';
+  svg.style.transform = 'rotate(0deg)';
+  
+  const cx = 100, cy = 100, r = 90;
+  const sectors = 12;
+  const angleStep = (Math.PI * 2) / sectors;
+  
+  for (let i = 0; i < sectors; i++) {
+    const startAngle = (i * angleStep) - Math.PI / 2;
+    const endAngle = startAngle + angleStep;
+    
+    const x1 = cx + r * Math.cos(startAngle);
+    const y1 = cy + r * Math.sin(startAngle);
+    const x2 = cx + r * Math.cos(endAngle);
+    const y2 = cy + r * Math.sin(endAngle);
+    
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const d = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z`;
+    path.setAttribute('d', d);
+    path.setAttribute('fill', usedSectors.has(i) ? '#000' : (i % 2 === 0 ? '#2d2d5e' : '#1e1e42'));
+    path.setAttribute('stroke', usedSectors.has(i) ? '#333' : '#ffd700');
+    path.setAttribute('stroke-width', '1');
+    svg.appendChild(path);
+    
+    if (!usedSectors.has(i)) {
+      const midAngle = startAngle + angleStep / 2;
+      const tx = cx + (r * 0.7) * Math.cos(midAngle);
+      const ty = cy + (r * 0.7) * Math.sin(midAngle);
+      
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', tx);
+      text.setAttribute('y', ty);
+      text.setAttribute('fill', '#ffd700');
+      text.setAttribute('font-size', '12');
+      text.setAttribute('font-weight', 'bold');
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('dominant-baseline', 'middle');
+      text.textContent = i + 1;
+      svg.appendChild(text);
+    }
+  }
+}
+
+function spinWheel() {
+  if (wheelSpinning || usedSectors.size >= 12) { 
+    if(usedSectors.size >= 12) alert("Все сектора открыты!");
+    return; 
+  }
+  
+  wheelSpinning = true;
+  document.getElementById('spin-btn').disabled = true;
+  const svg = document.getElementById('wheel');
+  
+  let available = [];
+  for(let i=0; i<12; i++) if(!usedSectors.has(i)) available.push(i);
+  const targetSector = available[Math.floor(Math.random() * available.length)];
+  
+  const sectorAngle = targetSector * 30;
+  const extraRotation = 360 * 5;
+  const totalRotation = extraRotation + (360 - sectorAngle);
+  
+  svg.style.transition = 'transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+  svg.style.transform = `rotate(${totalRotation}deg)`;
+  
+  setTimeout(() => {
+    wheelSpinning = false;
+    document.getElementById('spin-btn').disabled = false;
+    usedSectors.add(targetSector);
+    drawWheel();
+    openWhatQuestion(targetSector);
+  }, 3100);
+}
+
+function openWhatQuestion(sectorIdx) {
+  const q = WHAT_QUESTIONS[sectorIdx];
+  document.getElementById('modal-theme').textContent = `Сектор ${sectorIdx + 1}`;
+  document.getElementById('modal-q').textContent = q.q;
+  document.getElementById('modal-a').textContent = q.a;
+  document.getElementById('modal-a').classList.remove('show');
+  document.getElementById('reveal-btn').style.display = 'inline-block';
+  
+  document.getElementById('reveal-btn').onclick = () => {
+    document.getElementById('modal-a').classList.add('show');
+    document.getElementById('reveal-btn').style.display = 'none';
+    whatScore++;
+    document.getElementById('what-score').textContent = whatScore;
+  };
+  
+  document.getElementById('modal').classList.add('show');
+}
+
+/* ================== УМНИЦЫ И УМНИКИ ================== */
+let smartIndex = 0;
+let smartActive = false;
+
+function startSmart() {
+  showScreen('screen-smart');
+  smartIndex = 0;
+  smartActive = true;
+  renderSmartPath();
+  loadSmartQuestion();
+}
+
+function renderSmartPath() {
+  const path = document.getElementById('smart-path');
+  path.innerHTML = '';
+  for (let i = 0; i < SMART_QUESTIONS.length; i++) {
+    const step = document.createElement('div');
+    step.className = 'smart-step';
+    if (i < smartIndex) step.classList.add('passed');
+    if (i === smartIndex) step.classList.add('active');
+    step.textContent = i + 1;
+    path.appendChild(step);
+  }
+}
+
+function loadSmartQuestion() {
+  if (smartIndex >= SMART_QUESTIONS.length) {
+    document.getElementById('smart-q').textContent = "🏆 Поздравляем! Вы дошли до конца и стали Умницей/Умником!";
+    document.getElementById('smart-input').style.display = 'none';
+    document.getElementById('smart-submit-btn').style.display = 'none';
+    document.getElementById('smart-feedback').textContent = "";
+    document.getElementById('smart-hint').textContent = "";
+    return;
+  }
+
+  const q = SMART_QUESTIONS[smartIndex];
+  document.getElementById('smart-q').textContent = q.q;
+  document.getElementById('smart-input').value = '';
+  document.getElementById('smart-input').style.display = 'block';
+  document.getElementById('smart-submit-btn').style.display = 'block';
+  document.getElementById('smart-feedback').textContent = '';
+  document.getElementById('smart-feedback').className = 'smart-feedback';
+  document.getElementById('smart-hint').textContent = "💡 Подсказка появится после первой ошибки";
+  
+  renderSmartPath();
+}
+
+function checkSmartAnswer() {
+  if (!smartActive) return;
+  const input = document.getElementById('smart-input').value;
+  if (!input) return;
+  
+  const q = SMART_QUESTIONS[smartIndex];
+  const feedback = document.getElementById('smart-feedback');
+  
+  if (parseInt(input) === q.a) {
+    feedback.textContent = "✅ Верно! Идем дальше.";
+    feedback.style.color = "var(--success)";
+    smartIndex++;
+    smartActive = false;
+    setTimeout(() => { smartActive = true; loadSmartQuestion(); }, 1500);
+  } else {
+    feedback.textContent = "❌ Ошибка. Попробуй еще раз!";
+    feedback.style.color = "var(--danger)";
+    document.getElementById('smart-hint').textContent = "💡 " + q.hint;
+    document.getElementById('smart-input').value = '';
+  }
+}
+
+function handleSmartKey(e) {
+  if (e.key === 'Enter') checkSmartAnswer();
+}
+
+/* ================== МОДАЛКА ================== */
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+/* ================== СТАРТ ================== */
+goMenu();
+</script>
+</body>
+</html>
